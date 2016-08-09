@@ -30,7 +30,7 @@ app.use('/wiki', wikiRouter);
 //required to set the port of the server
 var server = app.listen(4000);
 
-var models = require('./models');
+// var models = require('./models');
 
 // ... other stuff
 

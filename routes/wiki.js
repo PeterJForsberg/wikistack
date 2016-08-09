@@ -4,9 +4,11 @@ var router = express.Router();
 
 var Promise = require('bluebird');
 
+var models = require('../models');
+var Page = models.Page;
+var User = models.User;
+
 router.get('/', function(req, res) {
-	// retrieve all wiki pages (any?)
-	// res.send(200, "got get");
 	res.redirect('/');
 });
 
@@ -34,7 +36,7 @@ router.delete('/user', function(req, res) {
 	//TBD
 });
 
-router.get('/:userId', function(req, res, next) {
+router.get('/user/:userId', function(req, res, next) {
 
   var userPromise = User.findById(req.params.userId);
   var pagesPromise = Page.findAll({
@@ -44,31 +46,30 @@ router.get('/:userId', function(req, res, next) {
   });
 
   Promise.all([
-    userPromise, 
+    userPromise,
     pagesPromise
   ])
   .then(function(values) {
     var user = values[0];
     var pages = values[1];
-    res.render('user', { user: user, pages: pages });
+
+    // res.render('user', { user: user, pages: pages });
+    res.redirect('/wiki/add');
   })
   .catch(next);
 
 });
 
-var models = require('../models');
-var Page = models.Page; 
-var User = models.User; 
+
 
 router.post('/', function(req, res, next) {
-  
-    User.findOrCreate({
-      where: {
-        name: req.body.name,
-        email: req.body.email
-      }
-    })
-    .then(function (values) {
+  User.findOrCreate({
+    where: {
+      name: req.body.name,
+      email: req.body.email
+    }
+  })
+  .then(function (values) {
 
     var user = values[0];
 
@@ -76,70 +77,46 @@ router.post('/', function(req, res, next) {
       title: req.body.title,
       content: req.body.content
     });
+    console.log("saving page");
 
-      return page.save().then(function (page) {
-        return page.setAuthor(user);
-      });
+    return page.save()
+    // .then(function (page) {
+    //   return page.setAuthor(user);
+    // });
 
-    })
-    .then(function (page) {
-      // console.log(page, "Page");
-      // console.log(user, " Auth");
-      console.log('testpageroute', page.route);
-      res.redirect(page.route);
-    })
-    .catch(next);
+  })
+  .then(function (page) {
+    console.log("redirecting", page.route);
+    // res.redirect('/wiki/add');
+    res.redirect(page.route);
+  })
+  .catch(next);
+
+
 
   // STUDENT ASSIGNMENT:
   // make sure we only redirect *after* our save is complete!
   // note: `.save` returns a promise or it can take a callback.
-  // page.save()
-  // .then(function(page) {
-  //   console.log('nonerr', page.urlTitle);
-  // 	res.json(page);
-  // })
-  // .catch(function(err) {
-  // 	throw err;
-  // 	  console.log('error', page.urlTitle);
-  // });// -> after save -> res.redirect('/');
+
 });
 
 router.get('/:urlTitle', function(req, res, next){
-  Page.findOne({ 
-    where: { 
-      urlTitle: req.params.urlTitle 
-    } 
+  // console.log("FINDING ROUTE");
+  // res.send("mes");
+  Page.findOne({
+    where: {
+      urlTitle: req.params.urlTitle
+    }
   })
   .then(function(foundPage){
-    res.render('wikipage.html', 
+    console.log("query finished");
+    res.render('wikipage.html',
     	foundPage.dataValues
     );
-    // res.redirect('/:urlTitle'); 
+    // res.redirect('/:urlTitle');
   })
   .catch(next);
 });
 
-
-
-// 	Page.findAll({attributes: ['title', 'content']})
-// 	.then(function(sqlResult){
-// 		console.log("SQL result: ", sqlResult); 
-
-// 		res.send(' hit dynamic route at ' + req.params.urlTitle);
-// 		res.redirect('/:urlTitle'); 
-// 	});
-// 	// res.json(Page);
-// });
-
-// function generateUrlTitle (title) {
-//   if (title) {
-//     // Removes all non-alphanumeric characters from title
-//     // And make whitespace underscore
-//     return title.replace(/\s+/g, '_').replace(/\W/g, '');
-//   } else {
-//     // Generates random 5 letter string
-//     return Math.random().toString(36).substring(2, 7);
-//   }
-// }
 
 module.exports = router;

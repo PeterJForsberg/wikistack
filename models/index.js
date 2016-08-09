@@ -1,5 +1,5 @@
 var Sequelize = require('sequelize');
-var db = new Sequelize('postgres://localhost:5432/wikistack');
+var db = new Sequelize('postgres://localhost:5432/wikistack', {logging: true});
 
 var Page = db.define('page', {
     title: {
@@ -7,7 +7,7 @@ var Page = db.define('page', {
         allowNull: false
     },
     urlTitle: {
-        type: Sequelize.STRING, 
+        type: Sequelize.STRING,
         allowNull: false
     },
     content: {
@@ -25,14 +25,14 @@ var Page = db.define('page', {
     {
     getterMethods: {
     	route: function(){
-    		console.log("Test url", this.urlTitle);
+    		// console.log("Test url", this.urlTitle);
     		return '/wiki/' + this.urlTitle;
     	}
-    // 	urlTitle: function() 
+    // 	urlTitle: function()
    	},
    	hooks: {
    		beforeValidate: function generateUrlTitle (myPage) {
-			  console.log('title', myPage);
+			  console.log('RUNNING VALIDATOR', myPage);
 			  if (myPage.title) {
 			    // Removes all non-alphanumeric characters from title
 			    // And make whitespace underscore
@@ -48,7 +48,7 @@ var Page = db.define('page', {
 
 var User = db.define('user', {
     name: {
-        type: Sequelize.STRING, 
+        type: Sequelize.STRING,
         allowNull: false
     },
     email: {
